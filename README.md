@@ -1,159 +1,250 @@
 # DeAder
 
-DeAder is a small self-hosted web app for **“paste a link → download on your server → stream it on your phone”** (powered by `yt-dlp`).
+DeAder is a small self-hosted web app for **"paste a link → server downloads → phone streams it in the browser"**, powered by [`yt-dlp`](https://github.com/yt-dlp/yt-dlp).
 
-It’s built for the common case: you’re on iOS Safari, you paste a link (like YouTube), and you want the resulting file to **play in-browser** without fiddly steps.
+It's built for the everyday case: you're on iOS Safari, you paste a YouTube/etc. link on your phone, and you want the resulting file to **play in-browser** without fiddly steps.
 
-## What it does
+---
+
+## Features
 
 - **Paste URL → server downloads** via `yt-dlp`
-- **Auto-switches to a player page** that streams the downloaded file
-- **iOS-friendly playback** (serves the file in a way Safari can stream)
-- **LAN-friendly**: run on your PC and open from your phone on the same Wi‑Fi
-- **Optional protection** with a server token
-- **Optional network-compat knobs** (player client, PO token, TLS impersonation, source IP binding)
-- **Optional automated network recovery** wrapper (VPN rotation + cache purge + retry)
+- **Auto-redirects to a player page** that streams the file (HTTP range requests, iOS-friendly)
+- **LAN-friendly**: run on your PC, watch on your phone over Wi-Fi
+- **One-click Windows launcher** (`DeAder.bat`) with a desktop window + system tray icon
+- **Optional token** auth so the server isn't an open download endpoint
 - **Auto-cleanup**: removes old downloads after inactivity to free disk space
+- **Network compatibility knobs**: player client, PO token, TLS impersonation, source IP binding
+- **Optional automated recovery**: VPN rotation + cache purge + retry on `403` / bot-check failures
 
-## Run (Windows / PowerShell)
+---
 
-```powershell
-cd c:\Users\OwO\Desktop\Projects\DeAder
-.\run.ps1
-```
+## Quick start (Windows)
 
-Then open `http://localhost:8787` on your PC.
-
-## Run (Windows, double-click, no terminal window)
-
-Double-click:
-
-- `DeAder.bat` (recommended)
+Just double-click **`DeAder.bat`**.
 
 It will:
 
-- Start DeAder
-- Add a **system tray icon** that shows it’s running
-- Open your browser to your **LAN URL** (e.g. `http://192.168.x.x:8787`)
+1. Create a `.venv` and install dependencies the first time (hidden, no popups)
+2. Open a small **DeAder control window** with a startup progress bar
+3. Add a **system tray icon** (bonus, may live in the hidden overflow `^`)
+4. Once the server is fully ready, **open your browser to your LAN URL** (e.g. `http://192.168.1.20:8787`)
 
-Closing the tray icon via **Quit** stops DeAder.
+The control window has buttons for **Open**, **Restart**, **Pause / Resume**, **Clear Downloads**, **Clear Cache**, and **Quit**. Closing it (X) just hides it; use **Quit** to fully stop the server.
 
 ### Single-instance behavior
 
-By default, DeAder tray mode is **single-instance**:
+By default `DeAder.bat` is single-instance — running it again just opens the browser to the existing server.
 
-- If you run it again, it will **not start a second copy**; it just opens the browser.
+| Switch | Effect |
+| --- | --- |
+| `DeAder.bat` | Start, or focus existing instance |
+| `DeAder.bat --restart` | Stop the existing instance, then start fresh |
+| `DeAder.bat --multi` | Allow multiple instances (advanced) |
 
-Optional switches:
+### Tray / window metrics (privacy-safe)
 
-- `DeAder.bat --restart`: stop the existing instance and start a fresh one
-- `DeAder.bat --multi`: allow multiple instances (advanced)
+Counts only — no URLs, titles, or client IPs are shown:
 
-### Tray metrics (privacy-safe)
-
-The tray menu shows counts like:
-
-- jobs queued/downloading/finished/error
+- jobs queued / downloading / finished / error
 - active HTTP requests
-- active streams
+- active media streams
 
-It does **not** display URLs, titles, or client IPs.
+---
 
-## Use on iPhone (same Wi‑Fi / LAN)
+## Use on iPhone / Android (same Wi-Fi)
 
-1. Find your PC’s LAN IP:
+1. On your **PC**, find your LAN IP (the launcher prints it in the control window):
+
+   ```powershell
+   ipconfig
+   ```
+
+   Look for the `IPv4 Address` of your Wi-Fi/Ethernet adapter (e.g. `192.168.1.20` or `10.0.0.164`).
+
+2. On your **phone**, open Safari/Chrome and go to:
+
+   ```
+   http://YOUR_PC_LAN_IP:8787
+   ```
+
+3. Paste a video URL → wait → it auto-redirects to a player page that streams from your PC.
+
+---
+
+## Phone says "request timed out"? (LAN troubleshooting)
+
+This is almost always **one of three things**. Fix in this order:
+
+### 1. Network must be set to "Private", not "Public"
+
+Windows blocks inbound LAN traffic on **Public** networks by default. Check:
 
 ```powershell
-ipconfig
+Get-NetConnectionProfile | Select-Object Name,InterfaceAlias,NetworkCategory
 ```
 
-2. On iPhone Safari, open:
-- `http://YOUR_PC_LAN_IP:8787`
-
-If it doesn’t load, allow **Windows Firewall inbound TCP 8787**.
-
-## Build a double-clickable EXE (Windows)
+If your home Wi-Fi shows `Public`, change it (run **PowerShell as Administrator**):
 
 ```powershell
-cd c:\Users\OwO\Desktop\Projects\DeAder
-.\build.ps1
+Set-NetConnectionProfile -Name "YOUR_WIFI_NAME" -NetworkCategory Private
 ```
 
-Then double-click: `dist\DeAder.exe`
+> Only do this on networks you trust (home, not coffee shops).
 
-When run from the EXE, DeAder stores downloads in a `downloads/` folder next to the EXE.
+### 2. Firewall must allow inbound TCP 8787
 
-## Security (highly recommended)
+In **PowerShell as Administrator**:
 
-Set a token so your server isn’t an open “download anything” endpoint:
+```powershell
+New-NetFirewallRule -DisplayName "DeAder" -Direction Inbound -Action Allow `
+  -Protocol TCP -LocalPort 8787 -Profile Private,Domain
+```
+
+To verify:
+
+```powershell
+Get-NetFirewallRule -DisplayName "DeAder" | Format-Table DisplayName,Enabled,Profile,Action
+```
+
+### 3. Same network, no VPN split-brain
+
+- The phone and PC must be on the **same Wi-Fi**.
+- A VPN on the PC (e.g. Mullvad) usually doesn't break LAN, but a VPN on the **phone** routes traffic through the internet instead of the LAN — disable it for testing.
+- Mobile hotspots / "guest" Wi-Fi modes often isolate clients from each other; switch to your normal Wi-Fi.
+
+After fixing, on your PC you can sanity-check that the port is listening on all interfaces:
+
+```powershell
+netstat -ano | findstr ":8787"
+# Should show:  TCP    0.0.0.0:8787    0.0.0.0:0    LISTENING
+```
+
+---
+
+## Security (recommended)
+
+By default, DeAder will download anything posted to it. Lock it down with a token:
 
 ```powershell
 $env:DEADER_TOKEN="some-long-random-string"
-.\run.ps1
+.\DeAder.bat
 ```
 
-On iPhone, tap **Set token** once and paste that same token.
+In the web UI, tap **Set token** once and paste the same string. The token is sent as `x-auth-token` (or `?token=...`) on every request.
 
-## Notes
+---
 
-- **ffmpeg**: if you install it on the server, `yt-dlp` can fetch higher quality formats. Without ffmpeg, DeAder prefers an iOS-friendly progressive MP4 when available.
-- **Speed**: network-dependent. You can often improve throughput by increasing fragment concurrency:
+## Run without the launcher (advanced)
+
+If you'd rather run the server directly (visible terminal, easy logs):
 
 ```powershell
-$env:DEADER_CONCURRENT_FRAGMENTS="16"
+cd <repo>
 .\run.ps1
 ```
 
-- **Optional**: install `aria2c` and enable it:
+Then open `http://localhost:8787` on the PC, or `http://YOUR_PC_LAN_IP:8787` from another device.
+
+## Build a portable EXE
 
 ```powershell
-$env:DEADER_USE_ARIA2C="true"
-.\run.ps1
+.\build.ps1
 ```
+
+Output: `dist\DeAder.exe`. When run from the EXE, downloads are stored in a `downloads/` folder next to the EXE.
+
+---
+
+## Speed tips
+
+- **`ffmpeg`** on the server unlocks higher-quality formats. Without it, DeAder prefers an iOS-friendly progressive MP4.
+- **Increase fragment concurrency**:
+
+  ```powershell
+  $env:DEADER_CONCURRENT_FRAGMENTS="16"
+  ```
+
+- **Use `aria2c`** (install separately, then enable):
+
+  ```powershell
+  $env:DEADER_USE_ARIA2C="true"
+  ```
+
+---
 
 ## Auto-cleanup (disk space)
 
-To keep disk usage under control, DeAder tracks when a video was last played and **automatically deletes** it after:
+Each downloaded file gets a TTL based on **last access time**:
 
-- **At least 1 hour**, or
-- **2× the video duration**,
+- minimum **1 hour**
+- or **2× the video duration**
 - capped at **48 hours**
 
-The countdown is based on **last access time** (watching/streaming).
+A background task runs every 5 minutes and removes anything past its TTL.
 
-## Network compatibility knobs (403/TLS issues)
+---
 
-These are read from environment variables and applied to the yt-dlp instance. They help in networks where requests fail with 403s or TLS fingerprint/cipher mismatches.
+## Network compatibility knobs (403 / TLS issues)
+
+All read from environment variables, applied to the `yt-dlp` instance.
 
 ```powershell
-# Try a different YouTube player client signature
+# Different YouTube player client signature
 $env:DEADER_PLAYER_CLIENT="web_safari"
 
-# If you have a PO token (format is client+token, e.g. "web+…")
+# PO token (format: client+token, e.g. "web+...")
 $env:DEADER_PO_TOKEN="web+PASTE_TOKEN_HERE"
 
-# Use curl_cffi impersonation to match modern Chrome TLS fingerprint
+# curl_cffi impersonation (modern Chrome TLS fingerprint)
 $env:DEADER_IMPERSONATE="chrome-124:windows-10"
 
 # Bind outgoing connections to a specific local IP (IPv4/IPv6)
 $env:DEADER_SOURCE_ADDRESS="YOUR_LOCAL_IP"
-
-.\run.ps1
 ```
 
 ## Automated network recovery (Mullvad rotation + retry)
 
-If you’re seeing transient `403` or “confirm you’re not a bot” failures at volume, use the wrapper in `app/network_recovery.py` and wrap your yt-dlp call. It will:
+For transient `403` or "confirm you're not a bot" failures, the circuit breaker in `app/network_recovery.py` will:
 
-- Rotate Mullvad (commands are configurable)
+- Rotate Mullvad exit (commands configurable)
 - Run `yt-dlp --rm-cache-dir`
 - Delete `session_cookies.txt` if present
 - Sleep 8 seconds
 - Retry up to 3 rotations
 
-## Open-source hygiene (important)
+---
 
-This repo is intended to be open-sourced. Some files commonly produced during testing can contain personal data (URLs, cookies, tokens).
+## Configuration reference
 
-- **Ignored by default**: `.env*`, `session_cookies*.txt`, `cookies*.txt`, build outputs (`dist/`, `build/`), logs, and `downloads/*.json` metadata.
-- **Be careful with downloads**: downloaded media can be large, and metadata can contain the URLs/titles you pasted.
+| Env var | Default | What it does |
+| --- | --- | --- |
+| `DEADER_TOKEN` | _(empty)_ | Required header `x-auth-token` if set |
+| `DEADER_BIND` | `0.0.0.0` | Listen address |
+| `DEADER_PORT` | `8787` | Listen port |
+| `DEADER_MAX_JOBS` | `3` | Max simultaneous downloads |
+| `DEADER_CONCURRENT_FRAGMENTS` | `8` | yt-dlp parallel fragments |
+| `DEADER_USE_ARIA2C` | `false` | Use `aria2c` as external downloader |
+| `DEADER_PLAYER_CLIENT` | _(empty)_ | yt-dlp `extractor_args.youtube.player_client` |
+| `DEADER_PO_TOKEN` | _(empty)_ | yt-dlp `extractor_args.youtube.po_token` |
+| `DEADER_IMPERSONATE` | _(empty)_ | curl_cffi target (e.g. `chrome-124:windows-10`) |
+| `DEADER_SOURCE_ADDRESS` | _(empty)_ | Bind outbound to a local IP |
+
+---
+
+## Open-source hygiene
+
+The repo is meant to be public, but normal use produces files that may contain personal data (URLs, cookies, tokens). The `.gitignore` already excludes:
+
+- `.env*`, `session_cookies*.txt`, `cookies*.txt`
+- build outputs (`dist/`, `build/`, `*.spec`)
+- logs (`*.log`)
+- `downloads/*.json` metadata, `downloads/*.part`, `downloads/*.ytdl`
+
+Be careful before committing anything inside `downloads/` — file names and metadata reveal the URLs/titles you've fetched.
+
+---
+
+## License
+
+See `LICENSE` (if present) for terms. This project bundles `yt-dlp`, which is itself an Unlicense-licensed project.
