@@ -1,0 +1,126 @@
+:root {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background: radial-gradient(1200px 800px at 20% -10%, #1a2456 0%, rgba(26, 36, 86, 0) 60%),
+    radial-gradient(900px 600px at 90% 10%, #2b1453 0%, rgba(43, 20, 83, 0) 55%),
+    #0b0e14;
+  color: #e7eaf0;
+  font-family: -apple-system, system-ui, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+.wrap {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 22px 16px 28px;
+}
+
+.header {
+  margin: 8px 0 16px;
+}
+
+.brand {
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  font-size: 22px;
+}
+
+.sub {
+  opacity: 0.8;
+  margin-top: 6px;
+  line-height: 1.35;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 14px;
+  backdrop-filter: blur(10px);
+}
+
+.label {
+  display: block;
+  font-size: 13px;
+  opacity: 0.85;
+  margin-bottom: 8px;
+}
+
+.input {
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  padding: 12px 12px;
+  font-size: 14px;
+  outline: none;
+}
+
+.input:focus {
+  border-color: rgba(156, 194, 255, 0.9);
+  box-shadow: 0 0 0 3px rgba(156, 194, 255, 0.15);
+}
+
+.row {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.btn {
+  flex: 1;
+  border: 0;
+  border-radius: 12px;
+  padding: 11px 12px;
+  cursor: pointer;
+  background: linear-gradient(180deg, rgba(156, 194, 255, 0.95), rgba(108, 161, 255, 0.85));
+  color: #0b0e14;
+  font-weight: 700;
+}
+
+.btn.secondary {
+  background: rgba(255, 255, 255, 0.09);
+  color: #e7eaf0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-weight: 650;
+}
+
+.status {
+  margin-top: 12px;
+  font-size: 13px;
+  line-height: 1.35;
+  opacity: 0.9;
+  min-height: 18px;
+}
+
+.bar {
+  margin-top: 10px;
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+  display: none;
+}
+
+.barFill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, rgba(156, 194, 255, 1), rgba(199, 162, 255, 1));
+}
+
+.foot {
+  margin-top: 12px;
+  opacity: 0.75;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.95em;
+}
+

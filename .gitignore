@@ -1,3 +1,40 @@
+/.venv/
+__pycache__/
+*.pyc
+.python-version
+
+# Python tooling / caches
+/.pytest_cache/
+/.mypy_cache/
+/.ruff_cache/
+/.coverage
+coverage.xml
+
+# Node tooling (if you add later)
+/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build artifacts
+/dist/
+/build/
+*.spec
+
+# App runtime artifacts (may contain personal URLs/tokens)
+session_cookies.txt
+session_cookies*.txt
+cookies*.txt
+.env
+.env.*
+*.log
+
+# Downloads metadata (contains URLs/titles); keep media behavior up to you
+/downloads/*.json
+/downloads/*.part
+/downloads/*.ytdl
+
 # Libre Office Calc (Temporary File)
 *.ods#
 

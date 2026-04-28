@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DeAder</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <main class="wrap">
+      <header class="header">
+        <div class="brand">DeAder</div>
+        <div class="sub">Paste a link, download on server, play on iOS.</div>
+      </header>
+
+      <section class="card">
+        <label class="label" for="url">Video URL</label>
+        <input id="url" class="input" inputmode="url" placeholder="https://www.youtube.com/watch?v=..." />
+
+        <div class="row">
+          <button id="go" class="btn">Download</button>
+          <button id="tokenBtn" class="btn secondary" title="Optional: protect your server">Set token</button>
+        </div>
+
+        <div id="status" class="status"></div>
+        <div id="bar" class="bar" aria-hidden="true"><div id="barFill" class="barFill"></div></div>
+      </section>
+
+      <footer class="foot">
+        <div>
+          Tip: set <code>DEADER_TOKEN</code> on the server and tap “Set token” once on your phone.
+        </div>
+      </footer>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
+
