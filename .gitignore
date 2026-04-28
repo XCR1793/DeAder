@@ -30,10 +30,10 @@ cookies*.txt
 .env.*
 *.log
 
-# Downloads metadata (contains URLs/titles); keep media behavior up to you
-/downloads/*.json
-/downloads/*.part
-/downloads/*.ytdl
+# Downloads folder: ignore everything (media + metadata + partials)
+# Keep the folder itself in the repo via .gitkeep so the app has a place to write.
+/downloads/*
+!/downloads/.gitkeep
 
 # Libre Office Calc (Temporary File)
 *.ods#
