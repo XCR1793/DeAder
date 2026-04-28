@@ -28,13 +28,13 @@ Then open `http://localhost:8787` on your PC.
 
 Double-click:
 
-- `run-hidden.bat`
+- `DeAder.bat` (recommended)
 
 It will:
 
 - Start DeAder
 - Add a **system tray icon** that shows it’s running
-- Open your browser to `http://localhost:8787`
+- Open your browser to your **LAN URL** (e.g. `http://192.168.x.x:8787`)
 
 Closing the tray icon via **Quit** stops DeAder.
 
@@ -46,8 +46,18 @@ By default, DeAder tray mode is **single-instance**:
 
 Optional switches:
 
-- `run-hidden.bat --restart`: stop the existing instance and start a fresh one
-- `run-hidden.bat --multi`: allow multiple instances (advanced)
+- `DeAder.bat --restart`: stop the existing instance and start a fresh one
+- `DeAder.bat --multi`: allow multiple instances (advanced)
+
+### Tray metrics (privacy-safe)
+
+The tray menu shows counts like:
+
+- jobs queued/downloading/finished/error
+- active HTTP requests
+- active streams
+
+It does **not** display URLs, titles, or client IPs.
 
 ## Use on iPhone (same Wi‑Fi / LAN)
 
@@ -147,26 +157,3 @@ This repo is intended to be open-sourced. Some files commonly produced during te
 
 - **Ignored by default**: `.env*`, `session_cookies*.txt`, `cookies*.txt`, build outputs (`dist/`, `build/`), logs, and `downloads/*.json` metadata.
 - **Be careful with downloads**: downloaded media can be large, and metadata can contain the URLs/titles you pasted.
-
-
-# Project Name
-The Project Scope - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut viverra interdum nisi. In hac habitasse platea dictumst. Integer tincidunt, felis a pellentesque scelerisque, turpis sapien lacinia lectus, eu ultricies nibh leo mollis metus. Nullam a velit condimentum, tempor felis sit amet, euismod lectus. Phasellus sed orci a lectus placerat lacinia sed ac magna. Pellentesque quis mollis dolor. Suspendisse vel imperdiet mauris, a aliquam urna. Ut mattis risus nec sem tincidunt, ac facilisis sem fringilla. Praesent placerat vehicula euismod. Suspendisse volutpat massa id massa facilisis porta. 
-
-![Project_Image](.assets/Undaconstwuction.png)
-
-## Features
-* Some Mentionable Features that the Project focuses on
-
-## [Hardware](/Hardware/README.md)
-Hardware Overview - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut viverra interdum nisi. In hac habitasse platea dictumst. Integer tincidunt, felis a pellentesque scelerisque, turpis sapien lacinia lectus, eu ultricies nibh leo mollis metus. Nullam a velit condimentum, tempor felis sit amet, euismod lectus. Phasellus sed orci a lectus placerat lacinia sed ac magna. Pellentesque quis mollis dolor. Suspendisse vel imperdiet mauris, a aliquam urna. Ut mattis risus nec sem tincidunt, ac facilisis sem fringilla. Praesent placerat vehicula euismod. Suspendisse volutpat massa id massa facilisis porta. 
-
-## [Software](/Software/README.md)
-Software Overview - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut viverra interdum nisi. In hac habitasse platea dictumst. Integer tincidunt, felis a pellentesque scelerisque, turpis sapien lacinia lectus, eu ultricies nibh leo mollis metus. Nullam a velit condimentum, tempor felis sit amet, euismod lectus. Phasellus sed orci a lectus placerat lacinia sed ac magna. Pellentesque quis mollis dolor. Suspendisse vel imperdiet mauris, a aliquam urna. Ut mattis risus nec sem tincidunt, ac facilisis sem fringilla. Praesent placerat vehicula euismod. Suspendisse volutpat massa id massa facilisis porta. 
-
-## [Embedded](/Embedded/README.md)
-Embedded Overview - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut viverra interdum nisi. In hac habitasse platea dictumst. Integer tincidunt, felis a pellentesque scelerisque, turpis sapien lacinia lectus, eu ultricies nibh leo mollis metus. Nullam a velit condimentum, tempor felis sit amet, euismod lectus. Phasellus sed orci a lectus placerat lacinia sed ac magna. Pellentesque quis mollis dolor. Suspendisse vel imperdiet mauris, a aliquam urna. Ut mattis risus nec sem tincidunt, ac facilisis sem fringilla. Praesent placerat vehicula euismod. Suspendisse volutpat massa id massa facilisis porta. 
-
-## Roadmap
-* Milestones: Things I've Completed/Achieved within the project
-* Work In Progress: Things I'm Working on at the moment or havent completed yet
-* Planned: Things that are planned for the future

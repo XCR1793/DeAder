@@ -6,6 +6,7 @@ import re
 import secrets
 import time
 import sys
+import subprocess
 from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -42,6 +43,10 @@ DEADER_TOKEN = os.getenv("DEADER_TOKEN")  # optional but strongly recommended
 MAX_CONCURRENT_DOWNLOADS = int(os.getenv("DEADER_MAX_JOBS") or "2")
 CONCURRENT_FRAGMENTS = int(os.getenv("DEADER_CONCURRENT_FRAGMENTS") or "8")
 USE_ARIA2C = (os.getenv("DEADER_USE_ARIA2C") or "").strip().lower() in {"1", "true", "yes", "y", "on"}
+
+DOWNLOADS_PAUSED = False
+ACTIVE_HTTP_REQUESTS = 0
+ACTIVE_MEDIA_REQUESTS = 0
 
 
 def _is_probably_url(value: str) -> bool:
@@ -146,6 +151,92 @@ async def auth_middleware(request: Request, call_next):
     return await call_next(request)
 
 
+@app.middleware("http")
+async def metrics_middleware(request: Request, call_next):
+    global ACTIVE_HTTP_REQUESTS, ACTIVE_MEDIA_REQUESTS
+    ACTIVE_HTTP_REQUESTS += 1
+    is_media = request.url.path.startswith("/media/")
+    if is_media:
+        ACTIVE_MEDIA_REQUESTS += 1
+    try:
+        return await call_next(request)
+    finally:
+        ACTIVE_HTTP_REQUESTS = max(0, ACTIVE_HTTP_REQUESTS - 1)
+        if is_media:
+            ACTIVE_MEDIA_REQUESTS = max(0, ACTIVE_MEDIA_REQUESTS - 1)
+
+
+def _require_localhost(request: Request) -> None:
+    host = (request.client.host if request.client else "") or ""
+    if host not in {"127.0.0.1", "::1"}:
+        raise HTTPException(status_code=403, detail="Localhost only")
+
+
+@app.get("/api/metrics")
+async def metrics(request: Request):
+    _require_localhost(request)
+    total = len(jobs)
+    queued = sum(1 for j in jobs.values() if j.status == "queued")
+    downloading = sum(1 for j in jobs.values() if j.status == "downloading")
+    finished = sum(1 for j in jobs.values() if j.status == "finished")
+    errors = sum(1 for j in jobs.values() if j.status == "error")
+    return {
+        "downloads_paused": DOWNLOADS_PAUSED,
+        "jobs_total": total,
+        "jobs_queued": queued,
+        "jobs_downloading": downloading,
+        "jobs_finished": finished,
+        "jobs_error": errors,
+        "active_http_requests": ACTIVE_HTTP_REQUESTS,
+        "active_media_streams": ACTIVE_MEDIA_REQUESTS,
+    }
+
+
+@app.post("/api/admin/pause")
+async def admin_pause(request: Request, payload: Dict[str, Any]):
+    global DOWNLOADS_PAUSED
+    _require_localhost(request)
+    DOWNLOADS_PAUSED = bool(payload.get("paused"))
+    return {"downloads_paused": DOWNLOADS_PAUSED}
+
+
+@app.post("/api/admin/clear_downloads")
+async def admin_clear_downloads(request: Request):
+    _require_localhost(request)
+    removed = 0
+    for p in DOWNLOADS_DIR.glob("*"):
+        if p.is_file():
+            try:
+                p.unlink()
+                removed += 1
+            except Exception:
+                pass
+    # mark finished jobs as expired if their file is gone
+    now = time.time()
+    for j in jobs.values():
+        if j.status == "finished":
+            j.status = "error"
+            j.error = "Cleared by admin."
+            j.updated_at = now
+    return {"removed_files": removed}
+
+
+@app.post("/api/admin/clear_cache")
+async def admin_clear_cache(request: Request):
+    _require_localhost(request)
+    # Run cache purge using the same Python interpreter
+    try:
+        subprocess.run(
+            [sys.executable, "-m", "yt_dlp", "--rm-cache-dir"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except Exception:
+        pass
+    return {"ok": True}
+
+
 @app.get("/", response_class=HTMLResponse)
 async def index():
     return (WEB_DIR / "index.html").read_text(encoding="utf-8")
@@ -153,6 +244,8 @@ async def index():
 
 @app.post("/api/jobs")
 async def create_job(payload: Dict[str, Any]):
+    if DOWNLOADS_PAUSED:
+        raise HTTPException(status_code=503, detail="Downloads are paused.")
     url = (payload.get("url") or "").strip()
     if not url or not _is_probably_url(url):
         raise HTTPException(status_code=400, detail="Provide a valid http(s) URL.")
